@@ -1,13 +1,18 @@
 require 'ruby2d'
 
-set update_interval: 16.67 # Sätter uppdateringshastigheten till ca 60 FPS
+# Ange uppdateringshastigheten till ca 60 FPS
+set update_interval: 16.67 
+# Inställningar för fönstret
 set title: "Rymdfarkost Spel"
 set width: 800
 set height: 800
+
+# Skapa ljudinstans för spelet
 theme_sound = Sound.new('speed-demon.mp3')
 
+# Skapa bakgrundsbild
 background = Image.new(
-  'background.png', # Filväg till  bakgrundsbild
+  'background.png', # Filväg till bakgrundsbilden
   x: 0, y: 0, # Position för bakgrunden (övre vänstra hörnet)
   width: Window.width, height: Window.height, # Storlek på bakgrunden (fönsterstorlek)
   z: -1 # Lägg bakgrunden längst bak så andra objekt visas ovanpå den
@@ -31,31 +36,31 @@ class Player
     @height = @image.height
     @x = @image.x
     @y = @image.y
-    @health = 6
+    @health = 5
     @bullets = []
     @last_shot_time = 0
     @speed = 10
   end
 
-  # Flytta spelaren till höger om inte vid kanten av fönstret
-
+  # Flytta spelaren uppåt om inte vid kanten av fönstret
   def move_up
     @image.y -= @speed if @image.y > 0
     @y = @image.y  # Uppdatera player.y när spelaren rör sig uppåt
   end
 
+  # Flytta spelaren neråt om inte vid kanten av fönstret
   def move_down
     @image.y += @speed if @image.y < (Window.height - @image.height)
     @y = @image.y  # Uppdatera player.y när spelaren rör sig neråt
   end
 
-
+  # Flytta spelaren åt höger om inte vid kanten av fönstret
   def move_right
     @image.x += @speed if @image.x < (Window.width - @image.width)
     @x = @image.x  # Uppdatera player.x när spelaren rör sig åt höger
   end
 
-  # Flytta spelaren till vänster om inte vid kanten av fönstret
+  # Flytta spelaren åt vänster om inte vid kanten av fönstret
   def move_left
     @image.x -= @speed if @image.x > 0
     @x = @image.x  # Uppdatera player.x när spelaren rör sig åt vänster
@@ -71,6 +76,7 @@ class Player
     end
   end
 
+  # Återställ skottets hastighet när spelaren inte längre skjuter
   def no_shooting
     @speed = 10
   end
@@ -142,7 +148,6 @@ class Enemy
   end
 end
 
-
 # Klass för att hantera fiender
 class EnemyManager
   attr_reader :enemies
@@ -166,8 +171,6 @@ class EnemyManager
     end
   end
 
-
-
   private
 
   # Skapa en ny fiende med slumpad bild och lägg till den i listan över fiender
@@ -176,7 +179,6 @@ class EnemyManager
     new_enemy = Enemy.new(random_image_path)
     @enemies << new_enemy
   end
-
 end
 
 # Klass för att räkna poäng
@@ -215,14 +217,15 @@ class ScoreCounter
   end
 end
 
+# Klass för att räkna hälsa
 class HealthCounter
   attr_reader :health
 
-  # Initialiserar poängräknaren med startpoäng och textattribut
+  # Initialiserar hälsoräknaren med startpoäng och textattribut
   def initialize(health, x, y)
     @health = health
     @text = Text.new(
-      "liv: #{@health}",
+      "Liv: #{@health}",
       x: x,
       y: y,
       size: 40,
@@ -230,6 +233,7 @@ class HealthCounter
     )
   end
 
+  # Minska hälsopoängen med 1 och uppdatera texten
   def decrease_health
     @health -= 1
     update_text
@@ -237,14 +241,13 @@ class HealthCounter
 
   private
 
-  # Uppdatera texten med den aktuella poängen
+  # Uppdatera texten med den aktuella hälsopoängen
   def update_text
-    @text.text = "liv: #{@health}"
+    @text.text = "Liv: #{@health}"
   end
 end
 
-
-# GameOver-klassen
+# GameOver-klass
 class GameOver
   # Initialiserar GameOver-skärmen med den slutliga poängen
   def initialize(score)
@@ -279,8 +282,8 @@ score = 0 # Variabel för att lagra poäng
 enemy_manager = EnemyManager.new(player) # Skapa en fiendehanterare
 enemies = enemy_manager.enemies # Lista för att lagra fiender
 
+# Händelsehanterare för tangentnedtryckningar
 on :key_up do |event|
-  puts "blob"
   if event.key == 'space' 
     player.no_shooting
   end
@@ -305,29 +308,35 @@ end
 
 tick = 0 # Räknare för ticks
 score_counter = ScoreCounter.new(10, 10) # Skapa en poängräknare
-health_counter = HealthCounter.new(player.health, 10, 50)
+health_counter = HealthCounter.new(player.health, 10, 50) # Skapa en hälsoräknare
 
 # Uppdateringsloopen för spelet
 update do
-  theme_sound.play
+  theme_sound.play # Spela bakgrundsljudet
+
   score = score_counter.score # Uppdatera poängen
-  health = health_counter
+  health = health_counter.health # Uppdatera hälsopoängen
+
   if game_over == true # Om spelet är över
     game_over_screen = GameOver.new(score) # Skapa en GameOver-skärm med den slutliga poängen
     game_over_screen.show # Visa GameOver-skärmen
     player.bullets.each(&:destroy) # Ta bort spelarens skott från scenen
     enemies.each(&:destroy) # Ta bort alla fiender från scenen
     enemies.clear # Rensa fiendelistan
-    theme_sound.stop
+    theme_sound.stop # Stoppa bakgrundsljudet
   else
+    # Justera ljudvolymen baserat på poängen
     if score < 25
       theme_sound.volume = 1
     else
       theme_sound.volume = 1
+      # Öka fiendernas hastighet när poängen är högre
       enemy_manager.enemies.each do |enemy|
         enemy.speed = 1.8
       end
     end
+
+    # Flytta spelarens skott och kontrollera kollisioner
     player.bullets.each do |bullet|
       bullet.move
       bullet.destroy if bullet.y < 0
@@ -339,49 +348,48 @@ update do
           player.bullets.delete(bullet)
           enemies.delete(enemy)
           enemy.destroy
-          puts "prickad"
-          score_counter.increase_score
-        else
+          score_counter.increase_score # Öka poängen vid träff
         end
       end
     end
 
     enemy_manager.update # Uppdatera fienderna
 
+    # Flytta fienderna och kontrollera kollision med spelaren
     enemy_manager.enemies.each do |enemy|
       if enemy.y >= Window.height || enemy.x < -enemy.width || enemy.x > Window.width
         enemies.delete(enemy)
         enemy.destroy
-        health_counter.decrease_health
+        health_counter.decrease_health # Minska hälsan vid missad fiende
       else
         enemy.move
       end
     end
 
-    if enemies.any?  # Lägg till denna rad för att kontrollera om det finns fiender
+    # Kontrollera kollision med spelaren
+    if enemies.any?
       enemy_manager.enemies.each do |enemy|
         enemy.move
         if enemy.x >= player.x && enemy.x <= player.x + player.width && enemy.y >= player.y && enemy.y <= player.y + player.height
-         # Kollision har inträffat
-        enemies.delete(enemy)
-        enemy.destroy
-        health_counter.decrease_health
-        score_counter.increase_score
+          enemies.delete(enemy)
+          enemy.destroy
+          health_counter.decrease_health # Minska hälsan vid kollision med fiende
+          score_counter.increase_score # Öka poängen vid kollision med fiende
         end
       end
     end
 
-    player.bullets.reject! { |bullet| bullet.y < 0 }  # Ta bort skott som har gått utanför fönstret
+    # Ta bort skott som lämnat fönstret
+    player.bullets.reject! { |bullet| bullet.y < 0 }
+    # Ta bort fiender som lämnat fönstret
     enemies.reject! { |enemy| enemy.y > Window.height || enemy.x > Window.width || enemy.x < -Window.width }
 
-
-
+    # Avsluta spelet om spelaren har 0 hälsa
     if health_counter.health <= 0
-      puts "Spelet avslutat! Din poäng: #{score}"
       game_over = true
     end
 
-    tick += 1
+    # Uppdatera fienderna och flytta dem
     enemy_manager.update
     enemy_manager.enemies.each(&:move)
   end
