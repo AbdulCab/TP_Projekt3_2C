@@ -278,7 +278,7 @@ enemies = enemy_manager.enemies # Lista för att lagra fiender
 
 # Händelsehanterare för tangentnedtryckningar
 on :key_up do |event|
-  if event.key == 'space' 
+  if event.key == 'space' || event.key == 'z' 
     player.no_shooting
   end
 end
@@ -347,18 +347,20 @@ update do
       end
     end
 
-    enemy_manager.update # Uppdatera fienderna
+
 
     # Flytta fienderna och kontrollera kollision med spelaren
     enemy_manager.enemies.each do |enemy|
       if enemy.y >= Window.height || enemy.x < -enemy.width || enemy.x > Window.width
+        health_counter.decrease_health # Minska hälsan vid missad fiende
         enemies.delete(enemy)
         enemy.destroy
-        health_counter.decrease_health # Minska hälsan vid missad fiende
       else
         enemy.move
       end
     end
+
+    enemy_manager.update # Uppdatera fienderna
 
     # Kontrollera kollision med spelaren
     if enemies.any?
@@ -384,8 +386,8 @@ update do
     end
 
     # Uppdatera fienderna och flytta dem
-    enemy_manager.update
     enemy_manager.enemies.each(&:move)
+    enemy_manager.update
   end
 end
 
