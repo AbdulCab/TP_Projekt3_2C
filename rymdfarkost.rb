@@ -1,11 +1,11 @@
 require 'ruby2d'
 
 # Ange uppdateringshastigheten till ca 60 FPS
-set update_interval: 16.67 
+set update_interval: 33.33 
 # Inställningar för fönstret
 set title: "Rymdfarkost Spel"
 set width: 800
-set height: 800
+set height: 750
 
 # Skapa ljudinstans för spelet
 theme_sound = Sound.new('speed-demon.mp3')
@@ -203,12 +203,6 @@ class ScoreCounter
     update_text
   end
 
-  # Minska poängen med 1 om den inte redan är 0 och uppdatera texten
-  def decrease_score
-    @score -= 1 unless @score.zero?
-    update_text
-  end
-
   private
 
   # Uppdatera texten med den aktuella poängen
@@ -327,9 +321,9 @@ update do
   else
     # Justera ljudvolymen baserat på poängen
     if score < 25
-      theme_sound.volume = 1
+      theme_sound.volume = 5
     else
-      theme_sound.volume = 1
+      theme_sound.volume = 10
       # Öka fiendernas hastighet när poängen är högre
       enemy_manager.enemies.each do |enemy|
         enemy.speed = 1.8
